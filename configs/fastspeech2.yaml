@@ -1,0 +1,105 @@
+project:
+  name: fastspeech2_libriTTS
+  seed: 42
+
+paths:
+  data_root: /projects/e32706/speech_synthesis/data
+  libriTTS_root: /projects/e32706/speech_synthesis/data/LibriTTS
+  mfa_alignments: /projects/e32706/speech_synthesis/data/alignments
+  preprocessed: /projects/e32706/speech_synthesis/data/preprocessed
+  checkpoints: /projects/e32706/speech_synthesis/checkpoints
+  logs: /projects/e32706/speech_synthesis/logs
+  wandb_dir: /projects/e32706/speech_synthesis/wandb
+
+data:
+  subsets:
+    - train-clean-100
+    - train-clean-360
+  val_subset: dev-clean
+  test_subset: test-clean
+  sampling_rate: 24000
+  max_wav_value: 32768.0
+  num_workers: 8
+
+audio:
+  n_fft: 1024
+  hop_length: 256
+  win_length: 1024
+  n_mels: 80
+  fmin: 0
+  fmax: 8000
+  pitch_min: 50.0
+  pitch_max: 600.0
+  energy_min: 0.0
+  energy_max: 1.0
+  pitch_log_scale: true
+
+text:
+  language: en-us
+  cleaners:
+    - english_cleaners
+  phoneme_vocab_size: 75
+
+model:
+  encoder_hidden: 256
+  encoder_head: 2
+  encoder_layers: 4
+  encoder_kernel_size: 9
+  encoder_dropout: 0.2
+  decoder_hidden: 256
+  decoder_head: 2
+  decoder_layers: 4
+  decoder_kernel_size: 9
+  decoder_dropout: 0.2
+  fft_conv_filter_size: 1024
+  variance_predictor_filter_size: 256
+  variance_predictor_kernel_size: 3
+  variance_predictor_dropout: 0.5
+  n_bins: 256
+  max_seq_len: 2048
+
+train:
+  batch_size: 32
+  grad_accum_steps: 2
+  total_steps: 300000
+  warmup_steps: 4000
+  grad_clip_thresh: 1.0
+  save_every: 5000
+  eval_every: 2000
+  log_every: 100
+  mixed_precision: true
+  compile: true
+
+optimizer:
+  lr: 0.0625
+  betas: [0.9, 0.98]
+  eps: 1.0e-9
+  weight_decay: 0.0
+
+scheduler:
+  type: noam
+  d_model: 256
+  warmup_steps: 4000
+
+loss:
+  mel_weight: 1.0
+  postnet_weight: 1.0
+  duration_weight: 1.0
+  pitch_weight: 1.0
+  energy_weight: 1.0
+
+wandb:
+  project: fastspeech2-libriTTS
+  entity: null
+  tags:
+    - fastspeech2
+    - libriTTS
+    - non-autoregressive
+  log_audio_every: 10000
+
+mfa:
+  acoustic_model: english_us_arpa
+  dictionary: english_us_arpa
+  num_jobs: 16
+  beam: 10
+  retry_beam: 40

@@ -7,7 +7,7 @@ if [[ "$MODE" == "slurm" ]]; then
     JID=$(sbatch --parsable slurm/align.slurm)
     echo "Submitted align array job: $JID"
     echo "Monitor: squeue -j $JID"
-    echo "Logs: /projects/p32349/speech_synthesis/logs/align_${JID}_*.out"
+    echo "Logs: /projects/e32706/speech_synthesis/logs/align_${JID}_*.out"
 
 elif [[ "$MODE" == "local" ]]; then
     CONFIG="${2:-configs/fastspeech2.yaml}"

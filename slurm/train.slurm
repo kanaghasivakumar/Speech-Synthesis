@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=fs2_train
-#SBATCH --account=p32349
+#SBATCH --account=e32706
 #SBATCH --partition=gengpu
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=4
@@ -8,8 +8,8 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=240G
 #SBATCH --time=48:00:00
-#SBATCH --output=/projects/p32349/speech_synthesis/logs/train_%j.out
-#SBATCH --error=/projects/p32349/speech_synthesis/logs/train_%j.err
+#SBATCH --output=/projects/e32706/speech_synthesis/logs/train_%j.out
+#SBATCH --error=/projects/e32706/speech_synthesis/logs/train_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=kanaghasivakumar2026@u.northwestern.edu
 
@@ -25,11 +25,11 @@ export MASTER_PORT=29500
 export WORLD_SIZE=$((SLURM_NNODES * SLURM_NTASKS_PER_NODE))
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export NCCL_DEBUG=INFO
-export WANDB_DIR=/projects/p32349/speech_synthesis/wandb
+export WANDB_DIR=/projects/e32706/speech_synthesis/wandb
 
 RESUME=""
 if [[ -n "${SLURM_ARRAY_TASK_ID:-}" ]]; then
-    LATEST=$(ls -t /projects/p32349/speech_synthesis/checkpoints/step_*.pt 2>/dev/null | head -n1)
+    LATEST=$(ls -t /projects/e32706/speech_synthesis/checkpoints/step_*.pt 2>/dev/null | head -n1)
     [[ -n "$LATEST" ]] && RESUME="--resume $LATEST"
 fi
 

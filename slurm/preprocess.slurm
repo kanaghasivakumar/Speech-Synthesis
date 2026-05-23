@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=fs2_preprocess
-#SBATCH --account=p32349
+#SBATCH --account=e32706
 #SBATCH --partition=normal
 #SBATCH --array=0-1
 #SBATCH --nodes=1
@@ -8,8 +8,8 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
 #SBATCH --time=06:00:00
-#SBATCH --output=/projects/p32349/speech_synthesis/logs/preprocess_%A_%a.out
-#SBATCH --error=/projects/p32349/speech_synthesis/logs/preprocess_%A_%a.err
+#SBATCH --output=/projects/e32706/speech_synthesis/logs/preprocess_%A_%a.out
+#SBATCH --error=/projects/e32706/speech_synthesis/logs/preprocess_%A_%a.err
 
 module purge
 module load gcc/12.3.0

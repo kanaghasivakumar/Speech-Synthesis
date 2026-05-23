@@ -7,7 +7,7 @@ if [[ "$MODE" == "slurm" ]]; then
     JID=$(sbatch --parsable slurm/preprocess.slurm)
     echo "Submitted preprocess array job: $JID"
     echo "Monitor: squeue -j $JID"
-    echo "Logs: /projects/p32349/speech_synthesis/logs/preprocess_${JID}_*.out"
+    echo "Logs: /projects/e32706/speech_synthesis/logs/preprocess_${JID}_*.out"
 
 elif [[ "$MODE" == "local" ]]; then
     SUBSETS=("train-clean-100" "train-clean-360" "dev-clean" "test-clean")

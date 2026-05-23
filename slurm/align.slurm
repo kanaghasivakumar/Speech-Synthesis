@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=fs2_align
-#SBATCH --account=p32349
+#SBATCH --account=e32706
 #SBATCH --partition=normal
 #SBATCH --array=0-1
 #SBATCH --nodes=1
@@ -8,8 +8,8 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
 #SBATCH --time=12:00:00
-#SBATCH --output=/projects/p32349/speech_synthesis/logs/align_%A_%a.out
-#SBATCH --error=/projects/p32349/speech_synthesis/logs/align_%A_%a.err
+#SBATCH --output=/projects/e32706/speech_synthesis/logs/align_%A_%a.out
+#SBATCH --error=/projects/e32706/speech_synthesis/logs/align_%A_%a.err
 
 module purge
 module load gcc/12.3.0
@@ -20,9 +20,9 @@ conda activate fastspeech2
 SUBSETS=("train-clean-100" "train-clean-360")
 SUBSET="${SUBSETS[$SLURM_ARRAY_TASK_ID]}"
 
-LIBRI_ROOT=/projects/p32349/speech_synthesis/data/LibriTTS/${SUBSET}
-ALIGN_OUT=/projects/p32349/speech_synthesis/data/alignments/${SUBSET}
-CORPUS_DIR=/projects/p32349/speech_synthesis/data/mfa_corpus/${SUBSET}
+LIBRI_ROOT=/projects/e32706/speech_synthesis/data/LibriTTS/${SUBSET}
+ALIGN_OUT=/projects/e32706/speech_synthesis/data/alignments/${SUBSET}
+CORPUS_DIR=/projects/e32706/speech_synthesis/data/mfa_corpus/${SUBSET}
 
 mkdir -p "$CORPUS_DIR" "$ALIGN_OUT"
 

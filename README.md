@@ -16,14 +16,14 @@ Non-autoregressive TTS trained from scratch on the Quest HPC cluster (Northweste
 
 ```bash
 # Clone and enter repo
-cd /projects/p32349/speech_synthesis
+cd /projects/e32706/speech_synthesis
 git clone https://github.com/kanaghasivakumar/Speech-Synthesis && cd Speech-Synthesis
 
 # 1. Environment
 bash scripts/setup_env.sh
 
 # 2. Download data (runs on login node, parallelised)
-bash data/download_libriTTS.sh /projects/p32349/speech_synthesis/data/LibriTTS 8
+bash data/download_libriTTS.sh /projects/e32706/speech_synthesis/data/LibriTTS 8
 
 # 3-5. SLURM jobs (submit in order, or chain with --dependency)
 sbatch slurm/align.slurm

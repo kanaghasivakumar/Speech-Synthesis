@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+module load gcc/12.3.0-gcc
+module load cuda/12.1.0-gcc-11.2.0
+
+if [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
+	source "$HOME/miniconda3/etc/profile.d/conda.sh"
+fi
+
 MODE="${1:-slurm}"
 RESUME="${2:-}"
 
@@ -21,9 +28,10 @@ elif [[ "$MODE" == "interactive" ]]; then
     [[ -n "$LATEST" ]] && RESUME_FLAG="--resume $LATEST"
     [[ -n "$RESUME" ]] && RESUME_FLAG="--resume $RESUME"
 
+    export CUDA_NVML_BARE_METAL=1
     torchrun \
         --nnodes=1 \
-        --nproc_per_node="$(python -c 'import torch; print(torch.cuda.device_count())')" \
+        --nproc_per_node=2 \
         --rdzv_backend=c10d \
         --rdzv_endpoint=localhost:29500 \
         -m src.train \

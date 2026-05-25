@@ -29,7 +29,9 @@ download_subset() {
     echo "[DL] ${subset}"
     wget -q --show-progress -c "$url" -O "$archive"
     echo "[EXTRACT] ${subset}"
-    tar -xzf "$archive" -C "$dest" --strip-components=1
+    tar -xzf "$archive" -C "$dest"
+    mv "$dest/LibriTTS/"* "$dest/" 2>/dev/null || true
+    rmdir "$dest/LibriTTS" 2>/dev/null || true
     rm -f "$archive"
     echo "[DONE] ${subset}"
 }

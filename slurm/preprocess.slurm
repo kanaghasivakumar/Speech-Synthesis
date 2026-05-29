@@ -13,9 +13,13 @@
 
 module purge
 module load gcc/12.3.0-gcc
+module load cuda/12.1.0-gcc-11.2.0
 
-source ~/.bashrc
+source /home/omb8654/miniconda3/etc/profile.d/conda.sh
 conda activate fastspeech2
+
+cd /projects/e32706/omb8654/Speech-Synthesis
+export PYTHONPATH=/projects/e32706/omb8654/Speech-Synthesis
 
 SUBSETS=("train-clean-100" "train-clean-360")
 SUBSET="${SUBSETS[$SLURM_ARRAY_TASK_ID]}"

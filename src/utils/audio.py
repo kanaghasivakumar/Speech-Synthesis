@@ -1,47 +1,57 @@
+import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import librosa
+import pyworld as pw
 
 
-class FastSpeech2Loss(nn.Module):
-    def __init__(self, cfg):
-        super().__init__()
-        self.mel_w = cfg.loss.mel_weight
-        self.post_w = cfg.loss.postnet_weight
-        self.dur_w = cfg.loss.duration_weight
-        self.pitch_w = cfg.loss.pitch_weight
-        self.energy_w = cfg.loss.energy_weight
+def load_wav(path, sr):
+    wav, _ = librosa.load(path, sr=sr, mono=True)
+    return wav.astype(np.float64)
 
-    def forward(self, preds, targets, src_mask, mel_mask):
-        mel_out, mel_post, log_dur_pred, pitch_pred, energy_pred = preds
-        mel_target, duration_target, pitch_target, energy_target = targets
 
-        src_mask_inv = ~src_mask
-        mel_mask_inv = ~mel_mask
+def mel_spectrogram(wav, cfg):
+    stft = librosa.stft(
+        wav.astype(np.float32),
+        n_fft=cfg.audio.n_fft,
+        hop_length=cfg.audio.hop_length,
+        win_length=cfg.audio.win_length,
+    )
+    mag = np.abs(stft)
+    mel_basis = librosa.filters.mel(
+        sr=cfg.data.sampling_rate,
+        n_fft=cfg.audio.n_fft,
+        n_mels=cfg.audio.n_mels,
+        fmin=cfg.audio.fmin,
+        fmax=cfg.audio.fmax,
+    )
+    mel = np.dot(mel_basis, mag)
+    mel = np.log(np.maximum(mel, 1e-5))
+    return mel.T.astype(np.float32)
 
-        mel_loss = F.mse_loss(
-            mel_out.masked_select(mel_mask_inv.unsqueeze(-1)),
-            mel_target.masked_select(mel_mask_inv.unsqueeze(-1))
-        )
-        post_loss = F.mse_loss(
-            mel_post.masked_select(mel_mask_inv.unsqueeze(-1)),
-            mel_target.masked_select(mel_mask_inv.unsqueeze(-1))
-        )
-        dur_loss = F.mse_loss(
-            log_dur_pred.masked_select(src_mask_inv),
-            torch.log(duration_target.float().masked_select(src_mask_inv) + 1)
-        )
-        pitch_loss = F.mse_loss(
-            pitch_pred.masked_select(src_mask_inv),
-            pitch_target.masked_select(src_mask_inv)
-        )
-        energy_loss = F.mse_loss(
-            energy_pred.masked_select(src_mask_inv),
-            energy_target.masked_select(src_mask_inv)
-        )
 
-        total = (self.mel_w * mel_loss + self.post_w * post_loss +
-                 self.dur_w * dur_loss + self.pitch_w * pitch_loss +
-                 self.energy_w * energy_loss)
+def extract_pitch(wav, sr, hop_length):
+    f0, t = pw.dio(wav, sr, frame_period=hop_length / sr * 1000)
+    f0 = pw.stonemask(wav, f0, t, sr)
+    return f0.astype(np.float32)
 
-        return total, mel_loss, post_loss, dur_loss, pitch_loss, energy_loss
+
+def extract_energy(wav, n_fft, hop_length, win_length):
+    stft = librosa.stft(
+        wav.astype(np.float32),
+        n_fft=n_fft,
+        hop_length=hop_length,
+        win_length=win_length,
+    )
+    energy = np.sqrt(np.sum(np.abs(stft) ** 2, axis=0))
+    return energy.astype(np.float32)
+
+
+def normalize_pitch(f0, mean, std):
+    mask = f0 > 0
+    f0 = f0.copy()
+    f0[mask] = (f0[mask] - mean) / std
+    return f0
+
+
+def to_mel_tensor(mel_np):
+    return torch.from_numpy(mel_np)

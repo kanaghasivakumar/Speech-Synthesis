@@ -8,11 +8,11 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
 #SBATCH --time=06:00:00
-#SBATCH --output=/projects/e32706/speech_synthesis/logs/preprocess_%A_%a.out
-#SBATCH --error=/projects/e32706/speech_synthesis/logs/preprocess_%A_%a.err
+#SBATCH --output=/projects/e32706/omb8654/speech_synthesis/logs/preprocess_%A_%a.out
+#SBATCH --error=/projects/e32706/omb8654/speech_synthesis/logs/preprocess_%A_%a.err
 
 module purge
-module load gcc/12.3.0
+module load gcc/12.3.0-gcc
 
 source ~/.bashrc
 conda activate fastspeech2

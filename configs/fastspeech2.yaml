@@ -3,13 +3,13 @@ project:
   seed: 42
 
 paths:
-  data_root: /projects/e32706/speech_synthesis/data
-  libriTTS_root: /projects/e32706/speech_synthesis/data/LibriTTS
-  mfa_alignments: /projects/e32706/speech_synthesis/data/alignments
-  preprocessed: /projects/e32706/speech_synthesis/data/preprocessed
-  checkpoints: /projects/e32706/speech_synthesis/checkpoints
-  logs: /projects/e32706/speech_synthesis/logs
-  wandb_dir: /projects/e32706/speech_synthesis/wandb
+  data_root: /projects/e32706/omb8654/speech_synthesis/data
+  libriTTS_root: /projects/e32706/omb8654/speech_synthesis/data/LibriTTS
+  mfa_alignments: /projects/e32706/omb8654/speech_synthesis/data/alignments
+  preprocessed: /projects/e32706/omb8654/speech_synthesis/data/preprocessed
+  checkpoints: /projects/e32706/omb8654/speech_synthesis/checkpoints
+  logs: /projects/e32706/omb8654/speech_synthesis/logs
+  wandb_dir: /projects/e32706/omb8654/speech_synthesis/wandb
 
 data:
   subsets:

@@ -19,11 +19,11 @@ if [[ "$MODE" == "slurm" ]]; then
     fi
     echo "Submitted training job: $JID"
     echo "Monitor: squeue -j $JID"
-    echo "Logs: /projects/e32706/speech_synthesis/logs/train_${JID}.out"
+    echo "Logs: /projects/e32706/omb8654/speech_synthesis/logs/train_${JID}.out"
     echo "W&B:  https://wandb.ai"
 
 elif [[ "$MODE" == "interactive" ]]; then
-    LATEST=$(ls -t /projects/e32706/speech_synthesis/checkpoints/step_*.pt 2>/dev/null | head -n1 || true)
+    LATEST=$(ls -t /projects/e32706/omb8654/speech_synthesis/checkpoints/step_*.pt 2>/dev/null | head -n1 || true)
     RESUME_FLAG=""
     [[ -n "$LATEST" ]] && RESUME_FLAG="--resume $LATEST"
     [[ -n "$RESUME" ]] && RESUME_FLAG="--resume $RESUME"

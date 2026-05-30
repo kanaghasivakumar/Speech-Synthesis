@@ -90,6 +90,10 @@ def main():
         uid = p.stem
         spk, chap = p.parts[-3], p.parts[-2]
         tg_path = os.path.join(align_root, f"{uid}.TextGrid")
+        if not os.path.exists(tg_path):
+            tg_path = os.path.join(align_root, spk, f"{uid}.TextGrid")
+        if not os.path.exists(tg_path):
+            tg_path = os.path.join(align_root, spk, chap, f"{uid}.TextGrid")
         txt_path = wav_path.replace(".wav", ".normalized.txt")
         if not os.path.exists(tg_path) or not os.path.exists(txt_path):
             continue

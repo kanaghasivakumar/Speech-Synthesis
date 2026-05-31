@@ -32,12 +32,12 @@ class FastSpeech2Loss(nn.Module):
             torch.log(duration_target.float().masked_select(src_mask_inv) + 1)
         )
         pitch_loss = F.mse_loss(
-            pitch_pred.masked_select(src_mask_inv),
-            pitch_target.masked_select(src_mask_inv)
+            pitch_pred.masked_select(mel_mask_inv),
+            pitch_target.masked_select(mel_mask_inv)
         )
         energy_loss = F.mse_loss(
-            energy_pred.masked_select(src_mask_inv),
-            energy_target.masked_select(src_mask_inv)
+            energy_pred.masked_select(mel_mask_inv),
+            energy_target.masked_select(mel_mask_inv)
         )
 
         total = (self.mel_w * mel_loss + self.post_w * post_loss +

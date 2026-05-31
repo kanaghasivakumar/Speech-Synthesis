@@ -16,7 +16,7 @@ class LibriTTSDataset(Dataset):
 
     def __getitem__(self, idx):
         uid = self.items[idx]
-        base = os.path.join(self.preprocessed_dir, uid)
+        base = os.path.join(self.preprocessed_dir, uid.replace("_mel", ""))
 
         phonemes = np.load(f"{base}_phonemes.npy")
         mel = np.load(f"{base}_mel.npy")

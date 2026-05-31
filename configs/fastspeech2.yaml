@@ -28,11 +28,12 @@ audio:
   n_mels: 80
   fmin: 0
   fmax: 8000
-  pitch_min: 50.0
-  pitch_max: 600.0
+  pitch_min: 56.94
+  pitch_max: 949.74
   energy_min: 0.0
-  energy_max: 1.0
-  pitch_log_scale: true
+  energy_max: 569.51
+  pitch_mean: 164.01
+  pitch_std: 63.83
 
 text:
   language: en-us

@@ -39,7 +39,7 @@ text:
   language: en-us
   cleaners:
     - english_cleaners
-  phoneme_vocab_size: 75
+  phoneme_vocab_size: 86
 
 model:
   encoder_hidden: 256

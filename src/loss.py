@@ -3,6 +3,18 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+def expand_by_duration(x, durations):
+    outputs = []
+    for xi, di in zip(x, durations):
+        output = torch.repeat_interleave(xi, di.long().clamp(min=0), dim=0)
+        outputs.append(output)
+    T = max(o.size(0) for o in outputs)
+    out = x.new_zeros(len(outputs), T)
+    for i, o in enumerate(outputs):
+        out[i, :o.size(0)] = o
+    return out
+
+
 class FastSpeech2Loss(nn.Module):
     def __init__(self, cfg):
         super().__init__()
@@ -19,6 +31,13 @@ class FastSpeech2Loss(nn.Module):
         src_mask_inv = ~src_mask
         mel_mask_inv = ~mel_mask
 
+        pitch_target_expanded = expand_by_duration(pitch_target, duration_target)
+        energy_target_expanded = expand_by_duration(energy_target, duration_target)
+
+        T = mel_out.size(1)
+        pitch_target_expanded = pitch_target_expanded[:, :T]
+        energy_target_expanded = energy_target_expanded[:, :T]
+
         mel_loss = F.mse_loss(
             mel_out.masked_select(mel_mask_inv.unsqueeze(-1)),
             mel_target.masked_select(mel_mask_inv.unsqueeze(-1))
@@ -33,11 +52,11 @@ class FastSpeech2Loss(nn.Module):
         )
         pitch_loss = F.mse_loss(
             pitch_pred.masked_select(mel_mask_inv),
-            pitch_target.masked_select(mel_mask_inv)
+            pitch_target_expanded.masked_select(mel_mask_inv)
         )
         energy_loss = F.mse_loss(
             energy_pred.masked_select(mel_mask_inv),
-            energy_target.masked_select(mel_mask_inv)
+            energy_target_expanded.masked_select(mel_mask_inv)
         )
 
         total = (self.mel_w * mel_loss + self.post_w * post_loss +

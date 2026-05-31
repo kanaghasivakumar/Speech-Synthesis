@@ -6,7 +6,7 @@ class LengthRegulator(nn.Module):
     def forward(self, x, durations, max_len=None):
         outputs = []
         for xi, di in zip(x, durations):
-            output = torch.repeat_interleave(xi, di.long(), dim=0)
+            output = torch.repeat_interleave(xi, di.long().clamp(min=0), dim=0)
             outputs.append(output)
         out = self._pad(outputs, max_len)
         mel_lens = torch.tensor([o.size(0) for o in outputs], device=x.device)

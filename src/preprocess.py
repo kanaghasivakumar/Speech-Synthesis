@@ -1,6 +1,5 @@
 import os
 import argparse
-import json
 import glob
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -24,6 +23,23 @@ def parse_mfa_textgrid(tg_path):
     if phoneme_tier is None:
         return None
     return [(iv.minTime, iv.maxTime, iv.mark) for iv in phoneme_tier]
+
+
+def fix_durations(durations, T_mel):
+    durations = list(durations)
+    diff = T_mel - sum(durations)
+    if diff == 0:
+        return durations
+    if diff > 0:
+        durations[-1] += diff
+    else:
+        for i in range(len(durations) - 1, -1, -1):
+            if durations[i] + diff >= 1:
+                durations[i] += diff
+                break
+            diff += durations[i] - 1
+            durations[i] = 1
+    return durations
 
 
 def process_one(uid, wav_path, tg_path, text, out_dir, cfg):
@@ -52,11 +68,11 @@ def process_one(uid, wav_path, tg_path, text, out_dir, cfg):
         phonemes.append(ph)
         durations.append(frames)
 
-    total_dur = sum(durations)
-    if abs(total_dur - T_mel) > 3:
-        scale = T_mel / total_dur
+    if abs(sum(durations) - T_mel) > 3:
+        scale = T_mel / sum(durations)
         durations = [max(1, round(d * scale)) for d in durations]
-        durations[-1] += T_mel - sum(durations)
+
+    durations = fix_durations(durations, T_mel)
 
     ph_ids = phonemes_to_ids(phonemes)
     np.save(f"{out_base}_phonemes.npy", np.array(ph_ids, dtype=np.int32))
@@ -113,7 +129,7 @@ def main():
 
     manifest = os.path.join(cfg.paths.preprocessed, f"{args.split}_manifest.txt")
     with open(manifest, "w") as f:
-        processed = [Path(p).stem for p in glob.glob(f"{out_dir}/*_mel.npy")]
+        processed = [Path(p).stem.replace("_mel", "") for p in glob.glob(f"{out_dir}/*_mel.npy")]
         f.write("\n".join(sorted(processed)))
 
     print(f"Done: {success} success, {failed} failed -> {manifest}")

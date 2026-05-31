@@ -37,28 +37,32 @@ class VarianceAdaptor(nn.Module):
         return torch.bucketize(x, bins)
 
     def forward(self, x, src_mask, mel_mask=None, max_len=None,
-                pitch_target=None, energy_target=None, duration_target=None,
-                p_control=1.0, e_control=1.0, d_control=1.0):
+            pitch_target=None, energy_target=None, duration_target=None,
+            p_control=1.0, e_control=1.0, d_control=1.0):
         log_dur_pred = self.duration_predictor(x, src_mask)
-        pitch_pred = self.pitch_predictor(x, src_mask)
-        energy_pred = self.energy_predictor(x, src_mask)
 
         if duration_target is not None:
             x, mel_lens = self.length_regulator(x, duration_target, max_len)
-            dur_rounded = duration_target
         else:
             dur_rounded = torch.clamp(
                 torch.round(torch.exp(log_dur_pred) - 1) * d_control, min=0
             )
             x, mel_lens = self.length_regulator(x, dur_rounded, max_len)
 
+        pitch_pred = self.pitch_predictor(x, mel_mask)
+        energy_pred = self.energy_predictor(x, mel_mask)
+
         if pitch_target is not None:
+            T = x.size(1)
+            pitch_target = pitch_target[:, :T]
             pitch_emb = self.pitch_embed(self._bucketize(pitch_target, self.pitch_bins))
         else:
             pitch_emb = self.pitch_embed(self._bucketize(pitch_pred * p_control, self.pitch_bins))
         x = x + pitch_emb
 
         if energy_target is not None:
+            T = x.size(1)
+            energy_target = energy_target[:, :T]
             energy_emb = self.energy_embed(self._bucketize(energy_target, self.energy_bins))
         else:
             energy_emb = self.energy_embed(self._bucketize(energy_pred * e_control, self.energy_bins))

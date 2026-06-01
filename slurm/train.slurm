@@ -22,7 +22,7 @@ conda activate fastspeech2
 
 export PYTHONPATH=/projects/e32706/omb8654/Speech-Synthesis
 export MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n1)
-export MASTER_PORT=29500
+export MASTER_PORT=$(( 29500 + SLURM_JOB_ID % 1000 ))
 export WORLD_SIZE=$((SLURM_NNODES * SLURM_NTASKS_PER_NODE))
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export NCCL_DEBUG=INFO

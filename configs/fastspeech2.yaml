@@ -34,6 +34,7 @@ audio:
   energy_max: 569.51
   pitch_mean: 164.01
   pitch_std: 63.83
+  pitch_log_scale: true
 
 text:
   language: en-us

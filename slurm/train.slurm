@@ -34,9 +34,9 @@ LATEST=$(ls -t /projects/e32706/omb8654/speech_synthesis/checkpoints/step_*.pt 2
 
 cd /projects/e32706/omb8654/Speech-Synthesis
 
-srun torchrun \
+torchrun \
     --nnodes="$SLURM_NNODES" \
-    --nproc_per_node="$SLURM_NTASKS_PER_NODE" \
+    --nproc_per_node=4 \
     --rdzv_id="$SLURM_JOB_ID" \
     --rdzv_backend=c10d \
     --rdzv_endpoint="${MASTER_ADDR}:${MASTER_PORT}" \

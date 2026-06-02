@@ -58,7 +58,7 @@ model:
   variance_predictor_kernel_size: 3
   variance_predictor_dropout: 0.5
   n_bins: 256
-  max_seq_len: 2048
+  max_seq_len: 4096
 
 train:
   batch_size: 32

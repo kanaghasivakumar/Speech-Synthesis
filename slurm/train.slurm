@@ -7,7 +7,7 @@
 #SBATCH --gres=gpu:a100:2
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=120G
-#SBATCH --time=06:00:00
+#SBATCH --time=02:00:00
 #SBATCH --output=/projects/e32706/omb8654/speech_synthesis/logs/train_%j.out
 #SBATCH --error=/projects/e32706/omb8654/speech_synthesis/logs/train_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL

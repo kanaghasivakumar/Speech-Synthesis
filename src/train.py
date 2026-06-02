@@ -7,7 +7,7 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader, ConcatDataset
 from torch.utils.data.distributed import DistributedSampler
-from torch.cuda.amp import GradScaler, autocast
+from torch.amp import GradScaler, autocast
 from omegaconf import OmegaConf
 import wandb
 
@@ -60,6 +60,7 @@ def main():
     if is_main:
         os.makedirs(cfg.paths.checkpoints, exist_ok=True)
         os.makedirs(cfg.paths.logs, exist_ok=True)
+        os.makedirs(cfg.paths.wandb_dir, exist_ok=True)
         wandb.init(
             project=cfg.wandb.project,
             entity=cfg.wandb.entity,
@@ -92,7 +93,7 @@ def main():
     scheduler = torch.optim.lr_scheduler.LambdaLR(
         opt, lambda step: noam_lr(step, cfg.scheduler.d_model, cfg.scheduler.warmup_steps)
     )
-    scaler = GradScaler(enabled=cfg.train.mixed_precision)
+    scaler = GradScaler('cuda', enabled=cfg.train.mixed_precision)
 
     step = 0
     if args.resume:
@@ -108,7 +109,7 @@ def main():
     train_loader = DataLoader(
         train_ds, batch_size=cfg.train.batch_size, sampler=train_sampler,
         num_workers=cfg.data.num_workers, collate_fn=collate_fn, pin_memory=True,
-        persistent_workers=True, prefetch_factor=4,
+        persistent_workers=True, prefetch_factor=2,
     )
     val_loader = DataLoader(
         val_ds, batch_size=cfg.train.batch_size, shuffle=False,
@@ -119,8 +120,8 @@ def main():
     opt.zero_grad()
     accum = 0
 
+    train_sampler.set_epoch(step // len(train_loader))
     while step < cfg.train.total_steps:
-        train_sampler.set_epoch(step // len(train_loader))
         for batch in train_loader:
             if step >= cfg.train.total_steps:
                 break
@@ -133,7 +134,7 @@ def main():
             src_lens = batch["src_lens"].to(device)
             mel_lens = batch["mel_lens"].to(device)
 
-            with autocast(enabled=cfg.train.mixed_precision):
+            with autocast('cuda', enabled=cfg.train.mixed_precision):
                 mel_out, mel_post, log_dur, pitch_pred, energy_pred, \
                     src_mask, mel_mask, _, _ = model(
                         phonemes, src_lens, mel_lens, mel_target.size(1),
@@ -171,8 +172,10 @@ def main():
                         "step": step,
                     })
 
-                if is_main and step % cfg.train.eval_every == 0:
-                    run_eval(model, val_loader, criterion, device, cfg, step)
+                if step % cfg.train.eval_every == 0:
+                    val_loss = run_eval(model, val_loader, criterion, device)
+                    if is_main:
+                        wandb.log({"val/loss": val_loss, "step": step})
 
                 if is_main and step % cfg.train.save_every == 0:
                     ckpt_path = os.path.join(cfg.paths.checkpoints, f"step_{step:06d}.pt")
@@ -187,7 +190,7 @@ def main():
 
 
 @torch.no_grad()
-def run_eval(model, loader, criterion, device, cfg, step):
+def run_eval(model, loader, criterion, device):
     model.eval()
     losses = []
     for batch in loader:
@@ -198,7 +201,6 @@ def run_eval(model, loader, criterion, device, cfg, step):
         duration = batch["duration"].to(device)
         src_lens = batch["src_lens"].to(device)
         mel_lens = batch["mel_lens"].to(device)
-
         mel_out, mel_post, log_dur, pitch_pred, energy_pred, \
             src_mask, mel_mask, _, _ = model(
                 phonemes, src_lens, mel_lens, mel_target.size(1),
@@ -210,9 +212,8 @@ def run_eval(model, loader, criterion, device, cfg, step):
             src_mask, mel_mask,
         )
         losses.append(loss.item())
-
-    wandb.log({"val/loss": np.mean(losses), "step": step})
     model.train()
+    return float(np.mean(losses))
 
 
 if __name__ == "__main__":

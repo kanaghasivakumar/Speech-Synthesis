@@ -13,7 +13,7 @@ class LengthRegulator(nn.Module):
         return out, mel_lens
 
     def _pad(self, seqs, max_len=None):
-        T = max_len if max_len is not None else max(s.size(0) for s in seqs)
+        T = max(max_len, max(s.size(0) for s in seqs)) if max_len is not None else max(s.size(0) for s in seqs)
         d = seqs[0].size(1)
         out = seqs[0].new_zeros(len(seqs), T, d)
         for i, s in enumerate(seqs):

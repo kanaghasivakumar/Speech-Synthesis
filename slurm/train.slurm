@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=fs2_train
-#SBATCH --account=e32706
+#SBATCH --account=p32576
 #SBATCH --partition=gengpu
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=4
-#SBATCH --gres=gpu:a100:4
+#SBATCH --ntasks-per-node=2
+#SBATCH --gres=gpu:a100:2
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=120G
-#SBATCH --time=48:00:00
+#SBATCH --time=06:00:00
 #SBATCH --output=/projects/e32706/omb8654/speech_synthesis/logs/train_%j.out
 #SBATCH --error=/projects/e32706/omb8654/speech_synthesis/logs/train_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
@@ -36,10 +36,15 @@ cd /projects/e32706/omb8654/Speech-Synthesis
 
 torchrun \
     --nnodes="$SLURM_NNODES" \
-    --nproc_per_node=4 \
+    --nproc_per_node=2 \
     --rdzv_id="$SLURM_JOB_ID" \
     --rdzv_backend=c10d \
     --rdzv_endpoint="${MASTER_ADDR}:${MASTER_PORT}" \
     -m src.train \
     --config configs/fastspeech2.yaml \
     $RESUME
+
+LATEST=$(ls -t /projects/e32706/omb8654/speech_synthesis/checkpoints/step_*.pt 2>/dev/null | head -n1)
+if [[ -n "$LATEST" ]]; then
+    sbatch --account=p32576 /projects/e32706/omb8654/Speech-Synthesis/slurm/train.slurm
+fi

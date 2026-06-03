@@ -37,6 +37,12 @@ cd /projects/e32706/omb8654/Speech-Synthesis
 mkdir -p /projects/e32706/omb8654/speech_synthesis/wandb/wandb
 chmod -R 775 /projects/e32706/omb8654/speech_synthesis/wandb
 
+resubmit() {
+    LATEST=$(ls -t /projects/e32706/omb8654/speech_synthesis/checkpoints/step_*.pt 2>/dev/null | head -n1)
+    [[ -n "$LATEST" ]] && sbatch --account=p32576 /projects/e32706/omb8654/Speech-Synthesis/slurm/train.slurm
+}
+trap resubmit SIGTERM
+
 torchrun \
     --nnodes="$SLURM_NNODES" \
     --nproc_per_node=2 \
@@ -46,9 +52,5 @@ torchrun \
     --rdzv_endpoint="${MASTER_ADDR}:${MASTER_PORT}" \
     -m src.train \
     --config configs/fastspeech2.yaml \
-    $RESUME
-
-LATEST=$(ls -t /projects/e32706/omb8654/speech_synthesis/checkpoints/step_*.pt 2>/dev/null | head -n1)
-if [[ -n "$LATEST" ]]; then
-    sbatch --account=p32576 /projects/e32706/omb8654/Speech-Synthesis/slurm/train.slurm
-fi
+    $RESUME &
+wait $!

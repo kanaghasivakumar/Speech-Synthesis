@@ -22,7 +22,7 @@ conda activate fastspeech2
 
 export PYTHONPATH=/projects/e32706/omb8654/Speech-Synthesis
 export MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n1)
-export MASTER_PORT=$(( 29500 + SLURM_JOB_ID % 1000 ))
+export MASTER_PORT=$(shuf -i 29500-29999 -n 1)
 export WORLD_SIZE=$((SLURM_NNODES * SLURM_NTASKS_PER_NODE))
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export NCCL_DEBUG=INFO
@@ -34,9 +34,13 @@ LATEST=$(ls -t /projects/e32706/omb8654/speech_synthesis/checkpoints/step_*.pt 2
 
 cd /projects/e32706/omb8654/Speech-Synthesis
 
+mkdir -p /projects/e32706/omb8654/speech_synthesis/wandb/wandb
+chmod -R 775 /projects/e32706/omb8654/speech_synthesis/wandb
+
 torchrun \
     --nnodes="$SLURM_NNODES" \
     --nproc_per_node=2 \
+    --master_port="$MASTER_PORT" \
     --rdzv_id="$SLURM_JOB_ID" \
     --rdzv_backend=c10d \
     --rdzv_endpoint="${MASTER_ADDR}:${MASTER_PORT}" \

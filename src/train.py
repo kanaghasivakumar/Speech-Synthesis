@@ -72,6 +72,8 @@ def main():
 
     device = torch.device(f"cuda:{local_rank}")
     model = FastSpeech2(cfg).to(device)
+    model.variance_adaptor.set_pitch_bins(cfg.audio.pitch_min, cfg.audio.pitch_max, cfg.audio.pitch_log_scale)
+    model.variance_adaptor.set_energy_bins(cfg.audio.energy_min, cfg.audio.energy_max)
 
     if cfg.train.compile:
         model = torch.compile(model)
@@ -80,8 +82,6 @@ def main():
     criterion = FastSpeech2Loss(cfg).to(device)
 
     raw = model.module if hasattr(model, "module") else model
-    raw.variance_adaptor.set_pitch_bins(cfg.audio.pitch_min, cfg.audio.pitch_max, cfg.audio.pitch_log_scale)
-    raw.variance_adaptor.set_energy_bins(cfg.audio.energy_min, cfg.audio.energy_max)
 
     opt = torch.optim.Adam(
         model.parameters(),
@@ -120,8 +120,9 @@ def main():
     opt.zero_grad()
     accum = 0
 
-    train_sampler.set_epoch(step // len(train_loader))
+    epoch = step // len(train_loader)
     while step < cfg.train.total_steps:
+        train_sampler.set_epoch(epoch)
         for batch in train_loader:
             if step >= cfg.train.total_steps:
                 break
@@ -187,6 +188,7 @@ def main():
                         "scaler": scaler.state_dict(),
                         "cfg": OmegaConf.to_container(cfg),
                     }, ckpt_path)
+        epoch += 1
 
 
 @torch.no_grad()

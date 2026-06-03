@@ -50,6 +50,10 @@ class VarianceAdaptor(nn.Module):
             )
             x, mel_lens = self.length_regulator(x, dur_rounded, max_len)
 
+        if max_len is not None:
+            x = x[:, :max_len, :]
+            mel_lens = torch.clamp(mel_lens, max=max_len)
+
         pitch_pred = self.pitch_predictor(x, mel_mask)
         energy_pred = self.energy_predictor(x, mel_mask)
 

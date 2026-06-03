@@ -9,15 +9,19 @@ class LengthRegulator(nn.Module):
             output = torch.repeat_interleave(xi, di.long().clamp(min=0), dim=0)
             outputs.append(output)
         out = self._pad(outputs, max_len)
-        mel_lens = torch.tensor([o.size(0) for o in outputs], device=x.device)
+        mel_lens = torch.tensor(
+            [min(o.size(0), max_len) if max_len is not None else o.size(0) for o in outputs],
+            device=x.device
+        )
         return out, mel_lens
 
     def _pad(self, seqs, max_len=None):
-        T = max(max_len, max(s.size(0) for s in seqs)) if max_len is not None else max(s.size(0) for s in seqs)
+        T = max_len if max_len is not None else max(s.size(0) for s in seqs)
         d = seqs[0].size(1)
         out = seqs[0].new_zeros(len(seqs), T, d)
         for i, s in enumerate(seqs):
-            out[i, : s.size(0)] = s
+            length = min(s.size(0), T)
+            out[i, :length] = s[:length]
         return out
 
 

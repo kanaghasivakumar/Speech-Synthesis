@@ -154,9 +154,11 @@ def main():
             if accum == cfg.train.grad_accum_steps:
                 scaler.unscale_(opt)
                 torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.train.grad_clip_thresh)
+                scale_before = scaler.get_scale()
                 scaler.step(opt)
                 scaler.update()
-                scheduler.step()
+                if scale_before <= scaler.get_scale():
+                    scheduler.step()  
                 opt.zero_grad()
                 accum = 0
                 step += 1

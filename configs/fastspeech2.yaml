@@ -63,7 +63,7 @@ model:
 train:
   batch_size: 16
   grad_accum_steps: 4
-  total_steps: 300000
+  total_steps: 400000
   warmup_steps: 4000
   grad_clip_thresh: 1.0
   save_every: 100

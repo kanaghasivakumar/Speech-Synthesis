@@ -68,6 +68,8 @@ def main():
     model = FastSpeech2(cfg).to(device)
     model.variance_adaptor.set_pitch_bins(cfg.audio.pitch_min, cfg.audio.pitch_max, cfg.audio.pitch_log_scale)
     model.variance_adaptor.set_energy_bins(cfg.audio.energy_min, cfg.audio.energy_max)
+    normalized_bins = (model.variance_adaptor.pitch_bins - cfg.audio.pitch_mean) / cfg.audio.pitch_std
+    model.variance_adaptor.pitch_bins.copy_(normalized_bins)
 
     ckpt = torch.load(args.checkpoint, map_location=device)
     model.load_state_dict(ckpt["model"])

@@ -26,8 +26,7 @@ def infer(text, model, cfg, device, p_control=1.0, e_control=1.0, d_control=1.0)
 
 
 def mel_to_audio(mel, cfg):
-    mel_db = mel.T
-    mel_power = librosa.db_to_power(mel_db)
+    mel_power = np.exp(mel.T)
     audio = librosa.feature.inverse.mel_to_audio(
         mel_power,
         sr=cfg.data.sampling_rate,
@@ -65,9 +64,10 @@ def main():
 
     mel = infer(args.text, model, cfg, device, args.p_control, args.e_control, args.d_control)
     audio = mel_to_audio(mel, cfg)
+    audio = audio / (np.abs(audio).max() + 1e-8)
 
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
-    sf.write(args.out, audio, cfg.data.sampling_rate)
+    sf.write(args.out, (audio * 32767).astype(np.int16), cfg.data.sampling_rate, subtype='PCM_16')
     print(f"saved {args.out} ({len(audio)/cfg.data.sampling_rate:.2f}s)")
 
 

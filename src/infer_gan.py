@@ -5,7 +5,6 @@ import argparse
 import numpy as np
 import torch
 import soundfile as sf
-import librosa
 from omegaconf import OmegaConf
 
 sys.path.insert(0, '/projects/e32706/omb8654/hifi-gan')
@@ -31,11 +30,12 @@ def infer(text, model, cfg, device, p_control=1.0, e_control=1.0, d_control=1.0)
     return mel
 
 
-def load_hifigan(device):
+def load_hifigan(device, vocoder_checkpoint=None):
     with open('/projects/e32706/omb8654/hifi-gan/config_v1.json') as f:
         h = AttrDict(json.load(f))
     generator = Generator(h).to(device)
-    ckpt = torch.load('/projects/e32706/omb8654/hifi-gan/generator_universal.pth.tar', map_location=device)
+    ckpt_path = vocoder_checkpoint if vocoder_checkpoint else '/projects/e32706/omb8654/hifi-gan/ft_checkpoints/g_00010000'
+    ckpt = torch.load(ckpt_path, map_location=device)
     generator.load_state_dict(ckpt['generator'])
     generator.eval()
     generator.remove_weight_norm()
@@ -47,7 +47,6 @@ def mel_to_audio(mel, cfg, generator, h):
     mel_tensor = torch.tensor(mel).T.unsqueeze(0).to(device)
     with torch.no_grad():
         audio = generator(mel_tensor).squeeze().cpu().numpy()
-    audio = librosa.resample(audio, orig_sr=h.sampling_rate, target_sr=cfg.data.sampling_rate)
     return audio
 
 
@@ -60,6 +59,7 @@ def main():
     parser.add_argument("--p_control", type=float, default=1.0)
     parser.add_argument("--e_control", type=float, default=1.0)
     parser.add_argument("--d_control", type=float, default=1.0)
+    parser.add_argument("--vocoder_checkpoint", default=None)
     args = parser.parse_args()
 
     cfg = OmegaConf.load(args.config)
@@ -75,7 +75,7 @@ def main():
     model.load_state_dict(ckpt["model"])
     model.eval()
 
-    generator, h = load_hifigan(device)
+    generator, h = load_hifigan(device, args.vocoder_checkpoint)
 
     mel = infer(args.text, model, cfg, device, args.p_control, args.e_control, args.d_control)
     audio = mel_to_audio(mel, cfg, generator, h)

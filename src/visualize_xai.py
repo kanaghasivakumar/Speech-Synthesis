@@ -17,12 +17,15 @@ def load_model(cfg, ckpt_path, device):
     model = FastSpeech2(cfg).to(device)
     ckpt = torch.load(ckpt_path, map_location=device)
     state = ckpt.get("model", ckpt)
+    state = {k.replace("module.", ""): v for k, v in state.items()}
     model.load_state_dict(state)
     model.variance_adaptor.set_pitch_bins(
         cfg.audio.pitch_min, cfg.audio.pitch_max,
         cfg.audio.get("pitch_log_scale", True),
     )
     model.variance_adaptor.set_energy_bins(cfg.audio.energy_min, cfg.audio.energy_max)
+    normalized_bins = (model.variance_adaptor.pitch_bins - cfg.audio.pitch_mean) / cfg.audio.pitch_std
+    model.variance_adaptor.pitch_bins.copy_(normalized_bins)
     model.eval()
     return model
 

@@ -19,7 +19,7 @@ data:
   test_subset: test-clean
   sampling_rate: 24000
   max_wav_value: 32768.0
-  num_workers: 8
+  num_workers: 4
 
 audio:
   n_fft: 1024
@@ -34,6 +34,7 @@ audio:
   energy_max: 569.51
   pitch_mean: 164.01
   pitch_std: 63.83
+  pitch_log_scale: true
 
 text:
   language: en-us
@@ -57,19 +58,19 @@ model:
   variance_predictor_kernel_size: 3
   variance_predictor_dropout: 0.5
   n_bins: 256
-  max_seq_len: 2048
+  max_seq_len: 4096
 
 train:
-  batch_size: 32
-  grad_accum_steps: 2
-  total_steps: 300000
+  batch_size: 16
+  grad_accum_steps: 4
+  total_steps: 400000
   warmup_steps: 4000
   grad_clip_thresh: 1.0
-  save_every: 5000
-  eval_every: 2000
-  log_every: 100
+  save_every: 500
+  eval_every: 200
+  log_every: 50
   mixed_precision: true
-  compile: true
+  compile: false
 
 optimizer:
   lr: 0.0625

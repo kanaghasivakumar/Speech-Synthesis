@@ -11,6 +11,9 @@ class FastSpeech2Loss(nn.Module):
         self.dur_w = cfg.loss.duration_weight
         self.pitch_w = cfg.loss.pitch_weight
         self.energy_w = cfg.loss.energy_weight
+        self.pitch_mean = cfg.audio.pitch_mean
+        self.pitch_std = cfg.audio.pitch_std
+        self.energy_max = cfg.audio.energy_max
 
     def forward(self, preds, targets, src_mask, mel_mask):
         mel_out, mel_post, log_dur_pred, pitch_pred, energy_pred = preds
@@ -35,13 +38,15 @@ class FastSpeech2Loss(nn.Module):
             log_dur_pred.masked_select(src_mask_inv),
             torch.log(duration_target.float().masked_select(src_mask_inv) + 1)
         )
+        pitch_target_norm = (pitch_target - self.pitch_mean) / self.pitch_std
+        energy_target_norm = energy_target / self.energy_max
         pitch_loss = F.mse_loss(
             pitch_pred.masked_select(mel_mask_inv),
-            pitch_target.masked_select(mel_mask_inv)
+            pitch_target_norm.masked_select(mel_mask_inv)
         )
         energy_loss = F.mse_loss(
             energy_pred.masked_select(mel_mask_inv),
-            energy_target.masked_select(mel_mask_inv)
+            energy_target_norm.masked_select(mel_mask_inv)
         )
 
         total = (self.mel_w * mel_loss + self.post_w * post_loss +

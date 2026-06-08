@@ -24,14 +24,15 @@ class VarianceAdaptor(nn.Module):
 
     def set_pitch_bins(self, lo, hi, log_scale=True):
         if log_scale:
-            self.pitch_bins = torch.exp(torch.linspace(
+            bins = torch.exp(torch.linspace(
                 torch.tensor(lo).log(), torch.tensor(hi).log(), self.pitch_bins.size(0)
             ))
         else:
-            self.pitch_bins = torch.linspace(lo, hi, self.pitch_bins.size(0))
+            bins = torch.linspace(lo, hi, self.pitch_bins.size(0))
+        self.pitch_bins.copy_(bins)
 
     def set_energy_bins(self, lo, hi):
-        self.energy_bins = torch.linspace(lo, hi, self.energy_bins.size(0))
+        self.energy_bins.copy_(torch.linspace(lo, hi, self.energy_bins.size(0)))
 
     def _bucketize(self, x, bins):
         return torch.bucketize(x, bins)
@@ -48,6 +49,10 @@ class VarianceAdaptor(nn.Module):
                 torch.round(torch.exp(log_dur_pred) - 1) * d_control, min=0
             )
             x, mel_lens = self.length_regulator(x, dur_rounded, max_len)
+
+        if max_len is not None:
+            x = x[:, :max_len, :]
+            mel_lens = torch.clamp(mel_lens, max=max_len)
 
         pitch_pred = self.pitch_predictor(x, mel_mask)
         energy_pred = self.energy_predictor(x, mel_mask)

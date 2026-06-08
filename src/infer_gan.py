@@ -34,7 +34,7 @@ def load_hifigan(device, vocoder_checkpoint=None):
     with open('/projects/e32706/omb8654/hifi-gan/config_v1.json') as f:
         h = AttrDict(json.load(f))
     generator = Generator(h).to(device)
-    ckpt_path = vocoder_checkpoint if vocoder_checkpoint else '/projects/e32706/omb8654/hifi-gan/ft_checkpoints/g_00010000'
+    ckpt_path = vocoder_checkpoint if vocoder_checkpoint else '/projects/e32706/omb8654/hifi-gan/ft_checkpoints/g_00020000'
     ckpt = torch.load(ckpt_path, map_location=device)
     generator.load_state_dict(ckpt['generator'])
     generator.eval()
